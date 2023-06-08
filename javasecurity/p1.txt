@@ -1,16 +1,14 @@
+암호화될 텍스트 문서  : 프로젝트 폴더에 생성.
+이 파일의 이름 : p1.txt
+
 package aes;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -149,71 +147,6 @@ public class CipherUtil {
 		byte[] plain = msg.getBytes();
 		byte[] hash = md.digest(plain);
 		return byteToHex(hash);
-	}
-	public static void encryptFile(String plainFile, String cipherFile, String strkey) {
-		//plainFile : 입력파일. 평문파일. 암호화할 파일
-		//ciphrerFile : 출력파일. 암호문파일
-		//strkey : 키값 abc1234567
-		try {
-			getKey(strkey); //key.ser 파일에 키객체 저장
-			ObjectInputStream ois = new ObjectInputStream(new FileInputStream("key.ser"));
-			Key key = (Key)ois.readObject();	//key.ser 파일에 등록된 Key 객체를 읽기
-			ois.close();
-			AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv);
-			cipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);	//암호화 객체 초기화
-			FileInputStream fis = new FileInputStream(plainFile);	//평문파일
-			FileOutputStream fos = new FileOutputStream(cipherFile);	//암호문파일
-			//CipherOutputStream : cipher 객체에 설정된 내용(암호화 함)으로 출력하는 스트림
-			CipherOutputStream cos = new CipherOutputStream(fos, cipher);
-			byte[] buf = new byte[1024];
-			int len;
-			while((len = fis.read(buf)) != -1) {
-				cos.write(buf,0,len);	//cipher 객체에 설정된 내용으로 암호화 하여 fos 스트림에 출력
-			}
-			fis.close();
-			cos.flush();
-			fos.flush();
-			cos.close();
-			fos.close();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
-	//입력된 키값을 가진 key 객체를 파일(key.ser 이름)로 생성.
-	private static void getKey(String key) throws Exception {
-		//makeKey(key) : 128 비트의 키로 생성
-		Key genkey = new SecretKeySpec(makeKey(key), "AES");
-		//key.ser이름의 파일 생성
-		//ObjectOutputStream : 객체를 외부 전송 스트림
-		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("key.ser"));
-		out.writeObject(genkey);	//key.ser 파일에 키객체 저장
-		out.flush();
-		out.close();
-	}
-	public static void decryptFile(String cipherFile, String plainFile) {
-		try {
-			ObjectInputStream ois = new ObjectInputStream(new FileInputStream("key.ser"));
-			Key key = (Key) ois.readObject();
-			ois.close();
-			AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv);
-			cipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
-			FileInputStream fis = new FileInputStream(cipherFile);
-			FileOutputStream fos = new FileOutputStream(plainFile);
-			CipherOutputStream cos = new CipherOutputStream(fos,cipher);
-			byte[] buf = new byte[1024];
-			int len;
-			while((len = fis.read(buf)) != -1) {
-				cos.write(buf, 0, len);
-			}
-			fis.close();
-			cos.flush();
-			fos.flush();
-			cos.close();
-			fos.close();
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-		
 	}
 			
 }
