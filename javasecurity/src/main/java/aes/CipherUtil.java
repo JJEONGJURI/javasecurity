@@ -191,19 +191,22 @@ public class CipherUtil {
 		out.close();
 	}
 	public static void decryptFile(String cipherFile, String plainFile) {
+		//cipherFile : 암호화된 데이터를 저장하고 있는 암호화 파일 이름
+		//plainFile : 복호화된 데이터를 저장할 출력파일 이름. 평문파일
 		try {
 			ObjectInputStream ois = new ObjectInputStream(new FileInputStream("key.ser"));
-			Key key = (Key) ois.readObject();
+			Key key = (Key) ois.readObject();	//key.ser 파일에서 키 객체 읽기
 			ois.close();
 			AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv);
-			cipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
+			cipher.init(Cipher.DECRYPT_MODE, key, paramSpec);	//cipher객체(암호화객체) 초기화 :복호화기능
 			FileInputStream fis = new FileInputStream(cipherFile);
 			FileOutputStream fos = new FileOutputStream(plainFile);
+			//cipher 객체에 설정된 내용(복호화기능)으로 fos 스트림에 출력
 			CipherOutputStream cos = new CipherOutputStream(fos,cipher);
 			byte[] buf = new byte[1024];
 			int len;
 			while((len = fis.read(buf)) != -1) {
-				cos.write(buf, 0, len);
+				cos.write(buf, 0, len);	//복호화된 데이터를 fos에 출력
 			}
 			fis.close();
 			cos.flush();
