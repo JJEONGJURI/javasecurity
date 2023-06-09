@@ -1,5 +1,9 @@
 package rsa;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -69,19 +73,78 @@ public class CipherRSA {
 	}
 
 	public static void getKey() {
-		// TODO Auto-generated method stub
+		try {
+			KeyPairGenerator key = KeyPairGenerator.getInstance("RSA");
+			key.initialize(2048);	//2048 비트 키 생성
+			KeyPair keyPair = key.generateKeyPair();
+			PrivateKey priKey = keyPair.getPrivate();	//개인키
+			PublicKey pubKey = keyPair.getPublic(); //공개키
+			ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("privatekey.ser")); // 프라이빗키 파일로저장
+			out.writeObject(priKey);	//개인키를 파일로 저장
+			out.flush();
+			out.close();
+			out = new ObjectOutputStream(new FileOutputStream("publickey.ser")); //공개키 파일로 저장
+			out.writeObject(pubKey);	//공개키를 파일로 저장
+			out.flush();
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 	}
-
-	public static String encrypt(String org, int menu1) {
-		// TODO Auto-generated method stub
-		return null;
+	public static PublicKey getPublicKey() { //공개키 불러오기 
+		ObjectInputStream ois = null;
+		PublicKey pubkey = null;
+		try {
+			ois = new ObjectInputStream(new FileInputStream("publickey.ser"));
+			pubkey = (PublicKey)ois.readObject();
+			ois.close();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return pubkey;
 	}
-
-	public static String decrypt(String org, int menu1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	
+	public static PrivateKey getPrivateKey() { //개인키 불러오기
+		ObjectInputStream ois = null;
+		PrivateKey prikey = null;
+		try {
+			ois = new ObjectInputStream(new FileInputStream("privatekey.ser"));
+			prikey = (PrivateKey)ois.readObject();
+			ois.close();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return prikey; //개인키 읽어서 변수로 저장
+	}
+	
+
+	public static String encrypt(String org, int menu1) {	//암호화
+		byte[] cipherMsg = new byte[1024];
+		try {
+			if(menu1==1)
+				cipher.init(Cipher.ENCRYPT_MODE, getPublicKey());	//기밀문서 > 공개키로 암호화
+			else
+				cipher.init(Cipher.ENCRYPT_MODE, getPrivateKey());	//본인문서 인증 > 개인키로 암호화 > 개인키 이용하여 cipher 객체 초기화
+			cipherMsg = cipher.doFinal(org.getBytes());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return byteToHex(cipherMsg);
+	}
+
+	public static String decrypt(String cipherMsg, int menu1) {	//복호화
+		byte[] plainMsg = new byte[1024];
+		try {
+			if(menu1==1)
+				cipher.init(Cipher.DECRYPT_MODE, getPrivateKey());	//기밀문서 > 개인키로 복호화
+			else
+				cipher.init(Cipher.DECRYPT_MODE, getPublicKey());	//본인무서인증 > 공개키로 복호화
+			plainMsg = cipher.doFinal(hexToByte(cipherMsg.trim()));// 문자열로 돼있는걸 byte형 배열로 바꿈 > byte형 배열을 복호화
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return new String(plainMsg).trim(); //복호화된 문자열 전달
+	}
+
 }
